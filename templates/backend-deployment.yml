@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.backend.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: {{ .Values.backend.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.backend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.backend.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        - name: {{ .Values.global.imagePullSecret }}
+
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: backend-config
+
+          env:
+            - name: COS_ENDPOINT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: cos-credentials
+                  key: COS_ENDPOINT
+            - name: COS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cos-credentials
+                  key: COS_ACCESS_KEY_ID
+            - name: COS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cos-credentials
+                  key: COS_SECRET_ACCESS_KEY
+            - name: COS_REGION
+              valueFrom:
+                secretKeyRef:
+                  name: cos-credentials
+                  key: COS_REGION
+            - name: COS_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: cos-credentials
+                  key: COS_BUCKET_NAME
+
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.backend.livenessProbe.path }}
+              port: 8081
+            initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.backend.readinessProbe.path }}
+              port: 8081
+            initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}

@@ -85,12 +85,17 @@ frontend:
 ingress:
   enabled: true
   className: "nginx"
-  host: datahub-v2-monitoring.data.cloud.net.intra
-  tls:
-    enabled: false
-    secretName: datahub-v2-monitoring-tls
   annotations:
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
-    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    cert-manager.io/common-name: datahub-v2-monitoring-a101731-hprd.data.cloud.net.intra
+    cert-manager.io/issuer: datalab-cloud-echonet-issuer
+    cert-manager.io/issuer-group: horizon.evertrust.io
+    cert-manager.io/issuer-kind: ClusterIssuer
+  hosts:
+    - host: datahub-v2-monitoring-a101731-hprd.data.cloud.net.intra
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - datahub-v2-monitoring-a101731-hprd.data.cloud.net.intra
+      secretName: datahub-v2-monitoring-a101731-hprd.data.cloud.net.intra-tls

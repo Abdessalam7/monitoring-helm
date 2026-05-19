@@ -96,10 +96,10 @@ frontend:
 ingress:
   enabled: true
   className: "nginx"
-  host: datahub-v2-monitoring.a101731.bnpparibas.com
+  host: datahub-v2-monitoring.data.cloud.net.intra
   tls:
-    enabled: false       # Passer à true si cert disponible
-    secretName: datahub-v2-tls
+    enabled: false
+    secretName: datahub-v2-monitoring-tls
   annotations:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"

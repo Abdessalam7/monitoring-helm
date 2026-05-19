@@ -1,19 +1,13 @@
-# ──────────────────────────────────────────────
-# Global
-# ──────────────────────────────────────────────
 global:
   registry: docker.artifactory-dogen.group.echonet
   imagePullSecret: image-pull-secret
   namespace: monitoring-datahub-v2
 
-# ──────────────────────────────────────────────
-# Backend – FastAPI (port 8081)
-# ──────────────────────────────────────────────
 backend:
   name: datahub-v2-backend
   image:
-    repository: docker.artifactory-dogen.group.echonet/datahub-v2-monitoring-backend
-    tag: "latest"
+    repository: private.fr2.icr.io/a101731-hprd/datahub-v2-monitoring-backend
+    tag: "main"
     pullPolicy: Always
 
   replicaCount: 1
@@ -38,9 +32,10 @@ backend:
     secretName: cos-credentials
     keys:
       COS_ENDPOINT: COS_ENDPOINT
-      COS_API_KEY: COS_API_KEY
-      COS_INSTANCE_CRN: COS_INSTANCE_CRN
-      COS_BUCKET: COS_BUCKET
+      COS_ACCESS_KEY_ID: COS_ACCESS_KEY_ID
+      COS_SECRET_ACCESS_KEY: COS_SECRET_ACCESS_KEY
+      COS_REGION: COS_REGION
+      COS_BUCKET_NAME: COS_BUCKET_NAME
 
   livenessProbe:
     path: /health
@@ -52,14 +47,11 @@ backend:
     initialDelaySeconds: 10
     periodSeconds: 10
 
-# ──────────────────────────────────────────────
-# Frontend – React/Vite servi par Nginx (port 8080)
-# ──────────────────────────────────────────────
 frontend:
   name: datahub-v2-frontend
   image:
-    repository: docker.artifactory-dogen.group.echonet/datahub-v2-monitoring-frontend
-    tag: "latest"
+    repository: private.fr2.icr.io/a101731-hprd/datahub-v2-monitoring-frontend
+    tag: "main"
     pullPolicy: Always
 
   replicaCount: 1
@@ -81,18 +73,15 @@ frontend:
     mainConfigMapName: nginx-main-config
 
   livenessProbe:
-    path: /
+    path: /health
     initialDelaySeconds: 10
     periodSeconds: 20
 
   readinessProbe:
-    path: /
+    path: /health
     initialDelaySeconds: 5
     periodSeconds: 10
 
-# ──────────────────────────────────────────────
-# Ingress
-# ──────────────────────────────────────────────
 ingress:
   enabled: true
   className: "nginx"
@@ -104,3 +93,4 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"

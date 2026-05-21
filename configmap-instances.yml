@@ -7,4 +7,4 @@ metadata:
     helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version }}
 data:
   instances.json: |
-{{ .Values.smokeTest.instancesJson | indent 4 }}
+{{ .Files.Get "instances.json" | indent 4 }}

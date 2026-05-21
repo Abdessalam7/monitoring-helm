@@ -1,0 +1,129 @@
+image:
+  repository: private.fr2.icr.io/a101731-hprd/pysmoke-test
+  tag: main
+  pullPolicy: Always
+
+env:
+  - name: ENV
+    value: "dev"
+  - name: PYTHONUNBUFFERED
+    value: "1"
+
+  # Paramètres pysmoke
+  - name: TARGET
+    value: "hprd"
+  - name: ENV_LIST
+    value: "dev,int,qual"
+  - name: SERVICE
+    value: "airflow"
+  - name: HTTP_TIMEOUT
+    value: "10"
+  - name: INSTANCES_CONFIG_PATH
+    value: "/etc/pysmoke-test/instances.json"
+  - name: LOCAL_OUTPUT_PATH
+    value: "/tmp/status.json"
+  - name: COS_OBJECT_KEY
+    value: "monitoring-web/input/airflow/status.json"
+
+  # Credentials COS injectés depuis le Secret existant `cos-credentials`
+  - name: COS_ENDPOINT
+    valueFrom:
+      secretKeyRef:
+        name: cos-credentials
+        key: COS_ENDPOINT
+  - name: COS_BUCKET_NAME
+    valueFrom:
+      secretKeyRef:
+        name: cos-credentials
+        key: COS_BUCKET_NAME
+  - name: COS_REGION
+    valueFrom:
+      secretKeyRef:
+        name: cos-credentials
+        key: COS_REGION
+  - name: COS_ACCESS_KEY_ID
+    valueFrom:
+      secretKeyRef:
+        name: cos-credentials
+        key: COS_ACCESS_KEY_ID
+  - name: COS_SECRET_ACCESS_KEY
+    valueFrom:
+      secretKeyRef:
+        name: cos-credentials
+        key: COS_SECRET_ACCESS_KEY
+
+command: ["python", "-u", "scripts/main.py"]
+args: []
+resources: {}
+## limits:
+#   cpu: 100m
+#   memory: 128Mi
+# requests:
+#   cpu: 50m
+#   memory: 64Mi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+serviceAccount:
+  create: true
+  name: "monitoring"
+  annotations:
+    cert-manager.io/issuer: datalab-cloud-echonet-issuer
+    cert-manager.io/issuer-group: horizon.evertrust.io
+    cert-manager.io/issuer-kind: ClusterIssuer
+
+imagePullSecrets:
+  - name: image-pull-secret
+
+podAnnotations: {}
+
+securityContext:
+  enabled: true
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+volumes:
+  - name: instances-config
+    configMap:
+      name: pysmoke-instances
+      items:
+        - key: instances.json
+          path: instances.json
+
+volumeMounts:
+  - name: instances-config
+    mountPath: /etc/pysmoke-test
+    readOnly: true
+
+# Liste des instances Airflow à checker
+# Structure: business_line -> env -> liste d'instances
+smokeTest:
+  instances:
+    aidi:
+      dev:
+        - APP_CODE: "a101731"
+          ENV: "dev"
+          RELEASE_UUID: "53d53716"
+          VERSION: "3.4.1"
+    arval:
+      dev:
+        - APP_CODE: "ap50708"
+          ENV: "dev"
+          RELEASE_UUID: "41b1560f"
+          VERSION: "3.3.3"
+      qual:
+        - APP_CODE: "ap50708"
+          ENV: "qual"
+          RELEASE_UUID: "91816d23"
+          VERSION: "3.4.1"
+    bcef:
+      dev:
+        - APP_CODE: "a100885"
+          ENV: "dev"
+          RELEASE_UUID: "f35f33d7"
+          VERSION: "3.5.2"
+    # Ajoute ici toutes les autres business_line / envs / instances
